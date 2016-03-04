@@ -1,0 +1,386 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9A27A8581C6EF06F00A4C562 /* square2.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A27A8571C6EF06F00A4C562 /* square2.png */; };
+		9A27A85A1C6EF7A800A4C562 /* square1.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A27A8591C6EF7A800A4C562 /* square1.png */; };
+		9A2C14051C697ACC00B47644 /* DeepBelief.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A2C14041C697ACC00B47644 /* DeepBelief.framework */; };
+		9A2C14071C697ADD00B47644 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A2C14061C697ADD00B47644 /* Accelerate.framework */; };
+		9A2C14141C697E8200B47644 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A2C14131C697E8200B47644 /* libc++.tbd */; };
+		9A3F95BB1C7AA8E1003FED7F /* Eye.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A3F95BA1C7AA8E1003FED7F /* Eye.png */; };
+		9A3F95BD1C7AACC0003FED7F /* jetpac.ntwk in Resources */ = {isa = PBXBuildFile; fileRef = 9A3F95BC1C7AACC0003FED7F /* jetpac.ntwk */; };
+		9A46654C1C69469100F4442A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A46654B1C69469100F4442A /* AppDelegate.swift */; };
+		9A46654E1C69469100F4442A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A46654D1C69469100F4442A /* ViewController.swift */; };
+		9A4665511C69469100F4442A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9A46654F1C69469100F4442A /* Main.storyboard */; };
+		9A4665531C69469100F4442A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A4665521C69469100F4442A /* Assets.xcassets */; };
+		9A46655E1C6947D100F4442A /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A46655D1C6947D100F4442A /* Camera.swift */; };
+		9AA560961C6BC96D008C54F1 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA560951C6BC96D008C54F1 /* Utils.swift */; };
+		9AA5609E1C6C0526008C54F1 /* svm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9AA5609A1C6C0526008C54F1 /* svm.cpp */; };
+		9AA5609F1C6C0526008C54F1 /* svmutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9AA5609C1C6C0526008C54F1 /* svmutils.cpp */; };
+		9AE61BDE1C6BBCE7002787BB /* Detection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE61BDD1C6BBCE7002787BB /* Detection.swift */; };
+		9AF499441C73C9DB00AB8498 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF499431C73C9DB00AB8498 /* Types.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		9A27A8571C6EF06F00A4C562 /* square2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = square2.png; sourceTree = "<group>"; };
+		9A27A8591C6EF7A800A4C562 /* square1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = square1.png; sourceTree = "<group>"; };
+		9A2C14041C697ACC00B47644 /* DeepBelief.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DeepBelief.framework; sourceTree = "<group>"; };
+		9A2C14061C697ADD00B47644 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Accelerate.framework; sourceTree = "<group>"; };
+		9A2C14101C697BDE00B47644 /* EyeLearn-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "EyeLearn-Bridging-Header.h"; sourceTree = "<group>"; };
+		9A2C14131C697E8200B47644 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		9A3F95BA1C7AA8E1003FED7F /* Eye.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Eye.png; sourceTree = "<group>"; };
+		9A3F95BC1C7AACC0003FED7F /* jetpac.ntwk */ = {isa = PBXFileReference; lastKnownFileType = file; path = jetpac.ntwk; sourceTree = "<group>"; };
+		9A4665481C69469100F4442A /* EyeLearn.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EyeLearn.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A46654B1C69469100F4442A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		9A46654D1C69469100F4442A /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		9A4665501C69469100F4442A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		9A4665521C69469100F4442A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9A4665571C69469200F4442A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = EyeLearn/Info.plist; sourceTree = "<group>"; };
+		9A46655D1C6947D100F4442A /* Camera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
+		9AA560951C6BC96D008C54F1 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		9AA5609A1C6C0526008C54F1 /* svm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svm.cpp; path = SVM/svm.cpp; sourceTree = "<group>"; };
+		9AA5609B1C6C0526008C54F1 /* svm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = svm.h; path = SVM/svm.h; sourceTree = "<group>"; };
+		9AA5609C1C6C0526008C54F1 /* svmutils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svmutils.cpp; path = SVM/svmutils.cpp; sourceTree = "<group>"; };
+		9AA5609D1C6C0526008C54F1 /* svmutils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = svmutils.h; path = SVM/svmutils.h; sourceTree = "<group>"; };
+		9AE61BDD1C6BBCE7002787BB /* Detection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Detection.swift; sourceTree = "<group>"; };
+		9AF499431C73C9DB00AB8498 /* Types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9A4665451C69469100F4442A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A2C14141C697E8200B47644 /* libc++.tbd in Frameworks */,
+				9A2C14051C697ACC00B47644 /* DeepBelief.framework in Frameworks */,
+				9A2C14071C697ADD00B47644 /* Accelerate.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9A2C14181C69810000B47644 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9A2C14131C697E8200B47644 /* libc++.tbd */,
+				9A2C14061C697ADD00B47644 /* Accelerate.framework */,
+				9A2C14041C697ACC00B47644 /* DeepBelief.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		9A46653F1C69469100F4442A = {
+			isa = PBXGroup;
+			children = (
+				9A46654A1C69469100F4442A /* EyeLearn */,
+				9A4665571C69469200F4442A /* Info.plist */,
+				9A4665491C69469100F4442A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9A4665491C69469100F4442A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9A4665481C69469100F4442A /* EyeLearn.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9A46654A1C69469100F4442A /* EyeLearn */ = {
+			isa = PBXGroup;
+			children = (
+				9A46654B1C69469100F4442A /* AppDelegate.swift */,
+				9A46654D1C69469100F4442A /* ViewController.swift */,
+				9AE61BDD1C6BBCE7002787BB /* Detection.swift */,
+				9A46655D1C6947D100F4442A /* Camera.swift */,
+				9AA560951C6BC96D008C54F1 /* Utils.swift */,
+				9AF499431C73C9DB00AB8498 /* Types.swift */,
+				9AA560991C6C051D008C54F1 /* SVM */,
+				9A46654F1C69469100F4442A /* Main.storyboard */,
+				9A3F95BC1C7AACC0003FED7F /* jetpac.ntwk */,
+				9A3F95BA1C7AA8E1003FED7F /* Eye.png */,
+				9A27A8591C6EF7A800A4C562 /* square1.png */,
+				9A27A8571C6EF06F00A4C562 /* square2.png */,
+				9A4665521C69469100F4442A /* Assets.xcassets */,
+				9A2C14181C69810000B47644 /* Frameworks */,
+				9A2C14101C697BDE00B47644 /* EyeLearn-Bridging-Header.h */,
+			);
+			path = EyeLearn;
+			sourceTree = "<group>";
+		};
+		9AA560991C6C051D008C54F1 /* SVM */ = {
+			isa = PBXGroup;
+			children = (
+				9AA5609A1C6C0526008C54F1 /* svm.cpp */,
+				9AA5609B1C6C0526008C54F1 /* svm.h */,
+				9AA5609C1C6C0526008C54F1 /* svmutils.cpp */,
+				9AA5609D1C6C0526008C54F1 /* svmutils.h */,
+			);
+			name = SVM;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9A4665471C69469100F4442A /* EyeLearn */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9A46655A1C69469200F4442A /* Build configuration list for PBXNativeTarget "EyeLearn" */;
+			buildPhases = (
+				9A4665441C69469100F4442A /* Sources */,
+				9A4665451C69469100F4442A /* Frameworks */,
+				9A4665461C69469100F4442A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EyeLearn;
+			productName = EyeLearn;
+			productReference = 9A4665481C69469100F4442A /* EyeLearn.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9A4665401C69469100F4442A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0720;
+				LastUpgradeCheck = 0720;
+				ORGANIZATIONNAME = "ID Labs";
+				TargetAttributes = {
+					9A4665471C69469100F4442A = {
+						CreatedOnToolsVersion = 7.2;
+						DevelopmentTeam = 423D7XJN2V;
+					};
+				};
+			};
+			buildConfigurationList = 9A4665431C69469100F4442A /* Build configuration list for PBXProject "EyeLearn" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 9A46653F1C69469100F4442A;
+			productRefGroup = 9A4665491C69469100F4442A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9A4665471C69469100F4442A /* EyeLearn */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9A4665461C69469100F4442A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A27A8581C6EF06F00A4C562 /* square2.png in Resources */,
+				9A4665531C69469100F4442A /* Assets.xcassets in Resources */,
+				9A27A85A1C6EF7A800A4C562 /* square1.png in Resources */,
+				9A4665511C69469100F4442A /* Main.storyboard in Resources */,
+				9A3F95BD1C7AACC0003FED7F /* jetpac.ntwk in Resources */,
+				9A3F95BB1C7AA8E1003FED7F /* Eye.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9A4665441C69469100F4442A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A46654E1C69469100F4442A /* ViewController.swift in Sources */,
+				9AA560961C6BC96D008C54F1 /* Utils.swift in Sources */,
+				9AA5609E1C6C0526008C54F1 /* svm.cpp in Sources */,
+				9AA5609F1C6C0526008C54F1 /* svmutils.cpp in Sources */,
+				9AE61BDE1C6BBCE7002787BB /* Detection.swift in Sources */,
+				9A46654C1C69469100F4442A /* AppDelegate.swift in Sources */,
+				9A46655E1C6947D100F4442A /* Camera.swift in Sources */,
+				9AF499441C73C9DB00AB8498 /* Types.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		9A46654F1C69469100F4442A /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9A4665501C69469100F4442A /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		9A4665581C69469200F4442A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+		9A4665591C69469200F4442A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		9A46655B1C69469200F4442A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EyeLearn",
+				);
+				INFOPLIST_FILE = EyeLearn/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EyeLearn",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.idlabs.EyeLearn;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "EyeLearn/EyeLearn-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		9A46655C1C69469200F4442A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EyeLearn",
+				);
+				INFOPLIST_FILE = EyeLearn/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EyeLearn",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.idlabs.EyeLearn;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "EyeLearn/EyeLearn-Bridging-Header.h";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9A4665431C69469100F4442A /* Build configuration list for PBXProject "EyeLearn" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9A4665581C69469200F4442A /* Debug */,
+				9A4665591C69469200F4442A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9A46655A1C69469200F4442A /* Build configuration list for PBXNativeTarget "EyeLearn" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9A46655B1C69469200F4442A /* Debug */,
+				9A46655C1C69469200F4442A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9A4665401C69469100F4442A /* Project object */;
+}
