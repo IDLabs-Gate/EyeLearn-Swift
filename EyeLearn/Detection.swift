@@ -30,7 +30,7 @@ private var nextState = PredictionState.start
 
 private var predictors = NSPointerArray(options: .OpaqueMemory)
 private var predictorNames = [String]()
-private var trainer = UnsafeMutablePointer<Void>()
+private var trainer : UnsafeMutablePointer<Void> = nil
 private var trainingName = String()
 
 private let groupAlg = dispatch_group_create()
@@ -58,8 +58,6 @@ extension ViewController {
     
     func processFrame(frameImage: CIImage){
         
-        let startTime = NSDate()
-        
         let w = frameImage.extent.size.width
         let h = frameImage.extent.size.height
         
@@ -71,9 +69,6 @@ extension ViewController {
             
             announce()
             
-            //keep at least 0.2 sec between processing frames
-            while Double(NSDate().timeIntervalSinceDate(startTime))<0.2 {}
-        
         }
         
         //Face Detection Algorithm
@@ -111,7 +106,7 @@ extension ViewController {
                 case .learningPlus:
                     
                     jpcnn_train(trainer, 1.0, obj.predictions, obj.length)
-                    sampleCount++
+                    sampleCount += 1
                     
                     dispatch_async(dispatch_get_main_queue()){
                         self.learningProgressView.setProgress(Float(sampleCount)/Float(totalSamplesPlus), animated: true)
@@ -136,7 +131,7 @@ extension ViewController {
                 case .learningMinus:
                     
                     jpcnn_train(trainer, 0.0, obj.predictions, obj.length)
-                    sampleCount++
+                    sampleCount += 1
 
                     dispatch_async(dispatch_get_main_queue()){
                         self.learningProgressView.setProgress(Float(sampleCount)/Float(totalSamplesMinus), animated: true)
@@ -196,9 +191,9 @@ extension ViewController {
     
     //MARK: Faces
     
-    func detectFaces(var frameImage: CIImage, rect: CGRect){
+    func detectFaces(frameImage: CIImage, rect: CGRect){
         
-        frameImage = CIImage(CGImage: CIContext().createCGImage(frameImage, fromRect: rect))
+        let frameImage = CIImage(CGImage: CIContext().createCGImage(frameImage, fromRect: rect))
         
         let features = faceDetector.featuresInImage(frameImage, options: [CIDetectorSmile : true/*, CIDetectorEyeBlink : true*/]) as! [CIFaceFeature]
         
@@ -257,7 +252,8 @@ extension ViewController {
                 if let subLayers = layers {
                     
                     while featureLayer==nil && currentSublayer<subLayers.count {
-                        let currentLayer = subLayers[currentSublayer++]
+                        let currentLayer = subLayers[currentSublayer]
+                        currentSublayer += 1
                         if currentLayer.name == "FaceLayer" {
                             featureLayer = currentLayer
                         }
@@ -290,9 +286,9 @@ extension ViewController {
     
     //MARK: Predictors
     
-    func predictObjects(var frameImage: CIImage, rect: CGRect) -> (predictions:UnsafeMutablePointer<Float>, length:Int32)?{
+    func predictObjects(frameImage: CIImage, rect: CGRect) -> (predictions:UnsafeMutablePointer<Float>, length:Int32)?{
         
-        frameImage = CIImage(CGImage: CIContext().createCGImage(frameImage, fromRect: rect))
+        var frameImage = CIImage(CGImage: CIContext().createCGImage(frameImage, fromRect: rect))
         
         let w = frameImage.extent.size.width
         let h = frameImage.extent.size.height
@@ -336,9 +332,9 @@ extension ViewController {
         
         let cnnInput = jpcnn_create_image_buffer_from_uint8_data(UnsafeMutablePointer<UInt8>(sourceStartAddr), Int32(width), Int32(height), 4, Int32(sourceRowBytes), Int32(doReverseChannels), 1)
         
-        var predictions = UnsafeMutablePointer<Float>()
+        var predictions : UnsafeMutablePointer<Float> = nil
         var length = Int32()
-        var labels = UnsafeMutablePointer<UnsafeMutablePointer<Int8>>()
+        var labels : UnsafeMutablePointer<UnsafeMutablePointer<Int8>> = nil
         var labelsLength = Int32()
         
         jpcnn_classify_image(network, cnnInput, UInt32(JPCNN_RANDOM_SAMPLE), -2, &predictions, &length, &labels, &labelsLength)
@@ -490,7 +486,7 @@ extension ViewController {
             
             let predictorFiles = files.filter({ $0 == name })
             
-            for var i = 0; i < predictorFiles.count; i++ {
+            for i in 0..<predictorFiles.count {
                 let path = docsDir + "/" + predictorFiles[i]
                 
                 print("removing \(path)")
@@ -666,9 +662,9 @@ func testNetwork() {
     let imagePath = NSBundle.mainBundle().pathForResource("<image file name>", ofType: "jpeg")! as NSString
     let inputImage = jpcnn_create_image_buffer_from_file(imagePath.UTF8String)
     
-    var predictions = UnsafeMutablePointer<Float>()
+    var predictions : UnsafeMutablePointer<Float> = nil
     var length = Int32()
-    var labels = UnsafeMutablePointer<UnsafeMutablePointer<Int8>>()
+    var labels : UnsafeMutablePointer<UnsafeMutablePointer<Int8>> = nil
     var labelsLength = Int32()
     
     jpcnn_classify_image(network, inputImage, 0, 0, &predictions, &length, &labels, &labelsLength)

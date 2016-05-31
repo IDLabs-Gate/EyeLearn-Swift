@@ -74,7 +74,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
             resumeButton .setTitle("Resume", forState: .Normal)
             resumeButton .setTitleColor(UIColor.whiteColor(), forState: .Normal)
             resumeButton.backgroundColor = UIColor.lightGrayColor().colorWithAlphaComponent(0.5)
-            resumeButton .addTarget(self, action: "resumeInterruptedSession:", forControlEvents: .TouchUpInside)
+            resumeButton .addTarget(self, action: #selector(ViewController.resumeInterruptedSession(_:)), forControlEvents: .TouchUpInside)
             resumeButton.center = cameraView.center
             resumeButton.hidden = true
             cameraView .addSubview(resumeButton)
@@ -91,7 +91,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // create AVCaptureSession
         session = AVCaptureSession()
-        session.sessionPreset = AVCaptureSessionPresetMedium
+        session.sessionPreset = AVCaptureSessionPresetHigh
         
         // setup the world view
         cameraView.session = session
@@ -183,7 +183,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
                 setupResult = .SessionConfigurationFailed
             }
             
-            
+            /*
             //hight framerate format
             do {
                 for vFormat in backCamera.formats {
@@ -200,7 +200,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
             }
             catch {
                 print("Error")
-            }
+            }*/
             
             //videoData
             videoDataOutput = AVCaptureVideoDataOutput()
@@ -254,7 +254,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
             case .Success:
                 // only setupt observers and start the session running if setup succeeded
                 
-                //self.addObservers()
+                self.addObservers()
                 //session.startRunning()
                 //sessionRunning = session.running
                 
@@ -401,14 +401,14 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
         session.addObserver(self, forKeyPath: "running", options: NSKeyValueObservingOptions.New, context: SessionRunningContext)
         stillImageOutput.addObserver(self, forKeyPath: "capturingStillImage", options:NSKeyValueObservingOptions.New, context: CapturingStillImageContext)
         
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "subjectAreaDidChange:", name: AVCaptureDeviceSubjectAreaDidChangeNotification, object: videoDeviceInput.device)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "sessionRuntimeError:", name: AVCaptureSessionRuntimeErrorNotification, object: session)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.subjectAreaDidChange(_:)), name: AVCaptureDeviceSubjectAreaDidChangeNotification, object: videoDeviceInput.device)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.sessionRuntimeError(_:)), name: AVCaptureSessionRuntimeErrorNotification, object: session)
         // A session can only run when the app is full screen. It will be interrupted in a multi-app layout, introduced in iOS 9,
         // see also the documentation of AVCaptureSessionInterruptionReason. Add observers to handle these session interruptions
         // and show a preview is paused message. See the documentation of AVCaptureSessionWasInterruptedNotification for other
         // interruption reasons.
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "sessionWasInterrupted:", name: AVCaptureSessionWasInterruptedNotification, object: session)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "sessionInterruptionEnded:", name: AVCaptureSessionInterruptionEndedNotification, object: session)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.sessionWasInterrupted(_:)), name: AVCaptureSessionWasInterruptedNotification, object: session)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.sessionInterruptionEnded(_:)), name: AVCaptureSessionInterruptionEndedNotification, object: session)
     }
     
     private func removeObservers() {
@@ -479,25 +479,20 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
         // Also note that it is not always possible to resume, see -[resumeInterruptedSession:].
         var showResumeButton = false
         
-        // In iOS 9 and later, the userInfo dictionary contains information on why the session was interrupted.
-        if #available(iOS 9.0, *) {
-            let reason = notification.userInfo![AVCaptureSessionInterruptionReasonKey]! as! Int
-            NSLog("Capture session was interrupted with reason %ld", reason)
-            
-            if reason == AVCaptureSessionInterruptionReason.AudioDeviceInUseByAnotherClient.rawValue ||
-                reason == AVCaptureSessionInterruptionReason.VideoDeviceInUseByAnotherClient.rawValue {
-                    showResumeButton = true
-            } else if reason == AVCaptureSessionInterruptionReason.VideoDeviceNotAvailableWithMultipleForegroundApps.rawValue {
-                // Simply fade-in a label to inform the user that the camera is unavailable.
-                cameraUnavailableLabel.hidden = false
-                cameraUnavailableLabel.alpha = 0.0
-                UIView.animateWithDuration(0.25) {
-                    cameraUnavailableLabel.alpha = 1.0
-                }
+        
+        let reason = notification.userInfo![AVCaptureSessionInterruptionReasonKey]! as! Int
+        NSLog("Capture session was interrupted with reason %ld", reason)
+        
+        if reason == AVCaptureSessionInterruptionReason.AudioDeviceInUseByAnotherClient.rawValue ||
+            reason == AVCaptureSessionInterruptionReason.VideoDeviceInUseByAnotherClient.rawValue {
+            showResumeButton = true
+        } else if reason == AVCaptureSessionInterruptionReason.VideoDeviceNotAvailableWithMultipleForegroundApps.rawValue {
+            // Simply fade-in a label to inform the user that the camera is unavailable.
+            cameraUnavailableLabel.hidden = false
+            cameraUnavailableLabel.alpha = 0.0
+            UIView.animateWithDuration(0.25) {
+                cameraUnavailableLabel.alpha = 1.0
             }
-        } else {
-            NSLog("Capture session was interrupted")
-            showResumeButton = (UIApplication.sharedApplication().applicationState == UIApplicationState.Inactive)
         }
         
         if showResumeButton {

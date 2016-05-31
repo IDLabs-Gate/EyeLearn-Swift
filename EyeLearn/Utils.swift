@@ -64,7 +64,8 @@ extension UIViewController : UIPopoverPresentationControllerDelegate {
                     return name.hasSuffix("_thumb.JPEG")
                     })*/
                     
-                    for var i = 0; i < files.count; i++ {
+                    for i in 0..<files.count {
+
                         let path = docsDir + "/" + files[i]
                         
                         print("removing \(path)")
@@ -180,7 +181,7 @@ extension UIViewController : UIPopoverPresentationControllerDelegate {
                             break
                         }
                         
-                        i++
+                        i += 1
                     }
                 }))
                 

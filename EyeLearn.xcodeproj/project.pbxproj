@@ -10,7 +10,6 @@
 		9A27A8581C6EF06F00A4C562 /* square2.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A27A8571C6EF06F00A4C562 /* square2.png */; };
 		9A27A85A1C6EF7A800A4C562 /* square1.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A27A8591C6EF7A800A4C562 /* square1.png */; };
 		9A2C14051C697ACC00B47644 /* DeepBelief.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A2C14041C697ACC00B47644 /* DeepBelief.framework */; };
-		9A2C14071C697ADD00B47644 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A2C14061C697ADD00B47644 /* Accelerate.framework */; };
 		9A2C14141C697E8200B47644 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A2C14131C697E8200B47644 /* libc++.tbd */; };
 		9A3F95BB1C7AA8E1003FED7F /* Eye.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A3F95BA1C7AA8E1003FED7F /* Eye.png */; };
 		9A3F95BD1C7AACC0003FED7F /* jetpac.ntwk in Resources */ = {isa = PBXBuildFile; fileRef = 9A3F95BC1C7AACC0003FED7F /* jetpac.ntwk */; };
@@ -22,6 +21,7 @@
 		9AA560961C6BC96D008C54F1 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA560951C6BC96D008C54F1 /* Utils.swift */; };
 		9AA5609E1C6C0526008C54F1 /* svm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9AA5609A1C6C0526008C54F1 /* svm.cpp */; };
 		9AA5609F1C6C0526008C54F1 /* svmutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9AA5609C1C6C0526008C54F1 /* svmutils.cpp */; };
+		9AC643471CFD748800145028 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AC643461CFD748800145028 /* Accelerate.framework */; };
 		9AE61BDE1C6BBCE7002787BB /* Detection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE61BDD1C6BBCE7002787BB /* Detection.swift */; };
 		9AF499441C73C9DB00AB8498 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF499431C73C9DB00AB8498 /* Types.swift */; };
 /* End PBXBuildFile section */
@@ -30,7 +30,6 @@
 		9A27A8571C6EF06F00A4C562 /* square2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = square2.png; sourceTree = "<group>"; };
 		9A27A8591C6EF7A800A4C562 /* square1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = square1.png; sourceTree = "<group>"; };
 		9A2C14041C697ACC00B47644 /* DeepBelief.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DeepBelief.framework; sourceTree = "<group>"; };
-		9A2C14061C697ADD00B47644 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Accelerate.framework; sourceTree = "<group>"; };
 		9A2C14101C697BDE00B47644 /* EyeLearn-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "EyeLearn-Bridging-Header.h"; sourceTree = "<group>"; };
 		9A2C14131C697E8200B47644 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		9A3F95BA1C7AA8E1003FED7F /* Eye.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Eye.png; sourceTree = "<group>"; };
@@ -47,6 +46,7 @@
 		9AA5609B1C6C0526008C54F1 /* svm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = svm.h; path = SVM/svm.h; sourceTree = "<group>"; };
 		9AA5609C1C6C0526008C54F1 /* svmutils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svmutils.cpp; path = SVM/svmutils.cpp; sourceTree = "<group>"; };
 		9AA5609D1C6C0526008C54F1 /* svmutils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = svmutils.h; path = SVM/svmutils.h; sourceTree = "<group>"; };
+		9AC643461CFD748800145028 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/Accelerate.framework; sourceTree = DEVELOPER_DIR; };
 		9AE61BDD1C6BBCE7002787BB /* Detection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Detection.swift; sourceTree = "<group>"; };
 		9AF499431C73C9DB00AB8498 /* Types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -56,9 +56,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9AC643471CFD748800145028 /* Accelerate.framework in Frameworks */,
 				9A2C14141C697E8200B47644 /* libc++.tbd in Frameworks */,
 				9A2C14051C697ACC00B47644 /* DeepBelief.framework in Frameworks */,
-				9A2C14071C697ADD00B47644 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -69,7 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				9A2C14131C697E8200B47644 /* libc++.tbd */,
-				9A2C14061C697ADD00B47644 /* Accelerate.framework */,
+				9AC643461CFD748800145028 /* Accelerate.framework */,
 				9A2C14041C697ACC00B47644 /* DeepBelief.framework */,
 			);
 			name = Frameworks;
@@ -157,7 +157,6 @@
 				TargetAttributes = {
 					9A4665471C69469100F4442A = {
 						CreatedOnToolsVersion = 7.2;
-						DevelopmentTeam = 423D7XJN2V;
 					};
 				};
 			};
