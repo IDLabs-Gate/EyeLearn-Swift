@@ -27,38 +27,38 @@ import Photos
 
 private var cameraView: CameraView!
 
-private var CapturingStillImageContext = UnsafeMutablePointer<Void>.alloc(1)
-private var SessionRunningContext = UnsafeMutablePointer<Void>.alloc(1)
+private var CapturingStillImageContext = UnsafeMutableRawPointer.allocate(bytes: 1, alignedTo: 128)//allocate(capacity: 1)
+private var SessionRunningContext = UnsafeMutableRawPointer.allocate(bytes: 1, alignedTo: 128)
 
 private var cameraUnavailableLabel: UILabel!
 private var resumeButton: UIButton!
 
 // Session management
-private var sessionQueue: dispatch_queue_t!
+private var sessionQueue: DispatchQueue!
 private var session: AVCaptureSession!
 private var videoDeviceInput: AVCaptureDeviceInput!
 private var stillImageOutput: AVCaptureStillImageOutput!
 private var videoDataOutput: AVCaptureVideoDataOutput!
 
 enum AVCamSetupResult: Int {
-    case Success
-    case CameraNotAuthorized
-    case SessionConfigurationFailed
+    case success
+    case cameraNotAuthorized
+    case sessionConfigurationFailed
 }
 
 // Utils
-private var setupResult: AVCamSetupResult = .Success
+private var setupResult: AVCamSetupResult = .success
 private var sessionRunning = false
 private var backgroundRecordingID: UIBackgroundTaskIdentifier = 0
 
-private var framesQueue : dispatch_queue_t!
+private var framesQueue : DispatchQueue!
 private var dataQueueSuspended = false
 
-private var timer: NSTimer?
+private var timer: Timer?
 
 extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
 
-    func setupCam(completion:(Void->Void)?) {
+    func setupCam(_ completion:((Void)->Void)?) {
         
         //Cam-related UI elements
         do {
@@ -67,25 +67,25 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
             cameraView = CameraView(frame: view.bounds)
             cameraView.layer.masksToBounds = true
             view .addSubview(cameraView)
-            view.sendSubviewToBack(cameraView)
+            view.sendSubview(toBack: cameraView)
             cameraView.alpha = 1
 
             resumeButton = UIButton(frame: CGRect(origin: cameraView.center, size: CGSize(width: 150, height: 50)))
-            resumeButton .setTitle("Resume", forState: .Normal)
-            resumeButton .setTitleColor(UIColor.whiteColor(), forState: .Normal)
-            resumeButton.backgroundColor = UIColor.lightGrayColor().colorWithAlphaComponent(0.5)
-            resumeButton .addTarget(self, action: #selector(ViewController.resumeInterruptedSession(_:)), forControlEvents: .TouchUpInside)
+            resumeButton .setTitle("Resume", for: UIControlState())
+            resumeButton .setTitleColor(UIColor.white, for: UIControlState())
+            resumeButton.backgroundColor = UIColor.lightGray.withAlphaComponent(0.5)
+            resumeButton .addTarget(self, action: #selector(ViewController.resumeInterruptedSession(_:)), for: .touchUpInside)
             resumeButton.center = cameraView.center
-            resumeButton.hidden = true
+            resumeButton.isHidden = true
             cameraView .addSubview(resumeButton)
             
             cameraUnavailableLabel = UILabel(frame: CGRect(origin: cameraView.center, size: CGSize(width: 200, height: 50)))
             cameraUnavailableLabel.text = "Camera Unavailable"
-            cameraUnavailableLabel.textColor = UIColor.whiteColor()
-            cameraUnavailableLabel.textAlignment = .Center
-            cameraUnavailableLabel.backgroundColor = UIColor.lightGrayColor().colorWithAlphaComponent(0.5)
+            cameraUnavailableLabel.textColor = UIColor.white
+            cameraUnavailableLabel.textAlignment = .center
+            cameraUnavailableLabel.backgroundColor = UIColor.lightGray.withAlphaComponent(0.5)
             cameraUnavailableLabel.center = cameraView.center
-            cameraUnavailableLabel.hidden = true
+            cameraUnavailableLabel.isHidden = true
             cameraView .addSubview(cameraUnavailableLabel)
         }
         
@@ -97,34 +97,34 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
         cameraView.session = session
         
         // communicate with the session and other session objects on this queue
-        sessionQueue = dispatch_queue_create("session queue", DISPATCH_QUEUE_SERIAL)
-        framesQueue = dispatch_queue_create("framesQueue", DISPATCH_QUEUE_SERIAL)
+        sessionQueue = DispatchQueue(label: "session queue", attributes: [])
+        framesQueue = DispatchQueue(label: "framesQueue", attributes: [])
         
-        setupResult = .Success
+        setupResult = .success
         
         // check video authorization status. Video access is required and audio access is optional
         // if audio access is denied, audio is not recorded during movie recording
-        switch AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo) {
+        switch AVCaptureDevice.authorizationStatus(forMediaType: AVMediaTypeVideo) {
             
-        case .Authorized:
+        case .authorized:
             // the user has previously granted access to the camera
             break
             
-        case .NotDetermined:
+        case .notDetermined:
             // the user has not yet been presented with the option to grant video access.
             // we suspend the session queue to delay session setup until the access request has completed to avoid
             // asking the user for audio access if video access is denied.
             // note that audio access will be implicitly requested when we create an AVCaptureDeviceInput for audio during session setup
-            dispatch_suspend(sessionQueue)
-            AVCaptureDevice.requestAccessForMediaType(AVMediaTypeVideo) { granted in
+            sessionQueue.suspend()
+            AVCaptureDevice.requestAccess(forMediaType: AVMediaTypeVideo) { granted in
                 if !granted {
-                    setupResult = .CameraNotAuthorized
+                    setupResult = .cameraNotAuthorized
                 }
-                dispatch_resume(sessionQueue)
+                sessionQueue.resume()
             }
         default:
             // the user has previously denied access
-            setupResult = .CameraNotAuthorized
+            setupResult = .cameraNotAuthorized
         }
         
         // setup the capture session
@@ -132,16 +132,16 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
         // why not do all of this on main queue?
         // because - AVCaptureSession.startRunning is a blocking call which can take a long time, we dispatch session setup to the sessionQueue
         // so that the main queue isn't blocked, which keeps the UI responsive
-        dispatch_async(sessionQueue) {
-            guard setupResult == .Success else {
+        sessionQueue.async {
+            guard setupResult == .success else {
 
-                if let block = completion { dispatch_async(dispatch_get_main_queue(), block) }
+                if let block = completion { DispatchQueue.main.async(execute: block) }
                 return
             }
             
             backgroundRecordingID = UIBackgroundTaskInvalid
             
-            guard let backCamera = ViewController.deviceWithMediaType(AVMediaTypeVideo, preferringPosition: .Back) else { return }
+            guard let backCamera = ViewController.deviceWithMediaType(AVMediaTypeVideo, preferringPosition: .back) else { return }
             let vidInput: AVCaptureDeviceInput!
             do {
                 
@@ -159,7 +159,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
                 session.addInput(vidInput)
                 videoDeviceInput = vidInput
 
-                dispatch_async(dispatch_get_main_queue()){
+                DispatchQueue.main.async{
                     // why are we dispatching this to the main queue?
                     // because AVCaptureVideoPreviewLayer is the backing layer for cameraView and UIView
                     // can only be manipulated on the main thread
@@ -167,9 +167,9 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
                     // on the AVCaptureVideoPreviewLayer's connection with other session manipulation
                     
                     // use the status bar orientation as the initial video orientation. Subsequent orientation changes are handled by viewWillTransitionToSize:withTransitionCoordinator:
-                    let statusBarOrientation = UIApplication.sharedApplication().statusBarOrientation
-                    var initialVideoOrientation :AVCaptureVideoOrientation = .Portrait
-                    if statusBarOrientation != .Unknown {
+                    let statusBarOrientation = UIApplication.shared.statusBarOrientation
+                    var initialVideoOrientation :AVCaptureVideoOrientation = .portrait
+                    if statusBarOrientation != .unknown {
                         initialVideoOrientation = AVCaptureVideoOrientation(rawValue: statusBarOrientation.rawValue)!
                     }
                     
@@ -180,7 +180,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
                 }
             } else {
                 NSLog("Could not add video device input to the session")
-                setupResult = .SessionConfigurationFailed
+                setupResult = .sessionConfigurationFailed
             }
             
             /*
@@ -206,19 +206,19 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
             videoDataOutput = AVCaptureVideoDataOutput()
 
             videoDataOutput.videoSettings = NSDictionary(object: Int(kCVPixelFormatType_32BGRA),
-                forKey: kCVPixelBufferPixelFormatTypeKey as String) as! [NSObject : AnyObject]
+                forKey: kCVPixelBufferPixelFormatTypeKey as String as String as NSCopying) as! [AnyHashable: Any]
             
             videoDataOutput.alwaysDiscardsLateVideoFrames = true
             
-            dispatch_suspend(framesQueue); dataQueueSuspended = true
+            framesQueue.suspend(); dataQueueSuspended = true
             videoDataOutput .setSampleBufferDelegate(self, queue:framesQueue )
             
             if session .canAddOutput(videoDataOutput) { session .addOutput(videoDataOutput) }
 
             //orient frames to initial application orientation
-            let statusBarOrientation = UIApplication.sharedApplication().statusBarOrientation
-            if statusBarOrientation != .Unknown {
-                videoDataOutput.connectionWithMediaType(AVMediaTypeVideo).videoOrientation = AVCaptureVideoOrientation(rawValue: statusBarOrientation.rawValue)! }
+            let statusBarOrientation = UIApplication.shared.statusBarOrientation
+            if statusBarOrientation != .unknown {
+                videoDataOutput.connection(withMediaType: AVMediaTypeVideo).videoOrientation = AVCaptureVideoOrientation(rawValue: statusBarOrientation.rawValue)! }
 
             //Still Image
             let still = AVCaptureStillImageOutput()
@@ -228,19 +228,19 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
                 stillImageOutput = still
             } else {
                 NSLog("Could not add still image output to the session")
-                setupResult = .SessionConfigurationFailed
+                setupResult = .sessionConfigurationFailed
                 
             }
             
             session.commitConfiguration()
             
             //start cam
-            if setupResult == .Success {
+            if setupResult == .success {
                 session.startRunning()//blocking call
-                sessionRunning = session.running
+                sessionRunning = session.isRunning
             }
             
-            if let block = completion { dispatch_async(dispatch_get_main_queue(), block) }
+            if let block = completion { DispatchQueue.main.async(execute: block) }
 
         }
         
@@ -249,9 +249,9 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func checkCam() -> AVCamSetupResult {
         
-        dispatch_async(sessionQueue) {
+        sessionQueue.async {
             switch setupResult {
-            case .Success:
+            case .success:
                 // only setupt observers and start the session running if setup succeeded
                 
                 self.addObservers()
@@ -260,26 +260,26 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
                 
                 break
                 
-            case .CameraNotAuthorized:
-                dispatch_async(dispatch_get_main_queue()) {
+            case .cameraNotAuthorized:
+                DispatchQueue.main.async {
                     let message = NSLocalizedString("App doesn't have permission to use the camera, please change privacy settings", comment: "The user has denied access to the camera")
-                    let alertController = UIAlertController(title: "Permission for App", message: message, preferredStyle: .Alert)
-                    let cancelAction = UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: .Cancel, handler: nil)
+                    let alertController = UIAlertController(title: "Permission for App", message: message, preferredStyle: .alert)
+                    let cancelAction = UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: .cancel, handler: nil)
                     alertController.addAction(cancelAction)
                     // provide quick access to Settings.
-                    let settingsAction = UIAlertAction(title: NSLocalizedString("Settings", comment: "Alert button to open Settings"), style: .Default) { action in
-                        UIApplication.sharedApplication().openURL(NSURL(string: UIApplicationOpenSettingsURLString)!)
+                    let settingsAction = UIAlertAction(title: NSLocalizedString("Settings", comment: "Alert button to open Settings"), style: .default) { action in
+                        UIApplication.shared.openURL(URL(string: UIApplicationOpenSettingsURLString)!)
                     }
                     alertController.addAction(settingsAction)
-                    self.presentViewController(alertController, animated: true, completion: nil)
+                    self.present(alertController, animated: true, completion: nil)
                 }
-            case .SessionConfigurationFailed:
-                dispatch_async(dispatch_get_main_queue()) {
+            case .sessionConfigurationFailed:
+                DispatchQueue.main.async {
                     let message = NSLocalizedString("Unable to capture media", comment: "Something went wrong during capture session configuration")
-                    let alertController = UIAlertController(title: "Permission for App", message: message, preferredStyle: .Alert)
-                    let cancelAction = UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: .Cancel, handler: nil)
+                    let alertController = UIAlertController(title: "Permission for App", message: message, preferredStyle: .alert)
+                    let cancelAction = UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: .cancel, handler: nil)
                     alertController.addAction(cancelAction)
-                    self.presentViewController(alertController, animated: true, completion: nil)
+                    self.present(alertController, animated: true, completion: nil)
                 }
             }
         }
@@ -290,8 +290,8 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func stopCam() {
 
-        dispatch_async(sessionQueue) {
-            if setupResult == .Success {
+        sessionQueue.async {
+            if setupResult == .success {
                 session.stopRunning()
                 sessionRunning = false
                 //self .removeObservers()
@@ -303,18 +303,18 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func startCam() {
 
-        dispatch_async(sessionQueue) {
+        sessionQueue.async {
             
-            if setupResult == .Success {
+            if setupResult == .success {
                 session.startRunning()
-                sessionRunning = session.running
+                sessionRunning = session.isRunning
             }
         
         }
     }
     
     
-    func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
+    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
         
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
 
@@ -325,7 +325,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
 
         }
         
-        let frameImage = CIImage(CVPixelBuffer: pixelBuffer)
+        let frameImage = CIImage(cvPixelBuffer: pixelBuffer)
         
         processFrame(frameImage);
 
@@ -333,8 +333,8 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func resumeFrames() {
         
-        dispatch_async(sessionQueue){
-            if dataQueueSuspended { dispatch_resume(framesQueue) }
+        sessionQueue.async{
+            if dataQueueSuspended { framesQueue.resume() }
             dataQueueSuspended = false
         }
         
@@ -343,8 +343,8 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func suspendFrames() {
        
-        dispatch_async(sessionQueue) {
-            if !dataQueueSuspended { dispatch_suspend(framesQueue) }
+        sessionQueue.async {
+            if !dataQueueSuspended { framesQueue.suspend() }
             dataQueueSuspended = true
         }
         
@@ -355,39 +355,39 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
     func orientCam() {
 
         // note that the app delegate controls the device orientation notifications required to use the device orientation
-        let deviceOrientation = UIDevice.currentDevice().orientation
+        let deviceOrientation = UIDevice.current.orientation
         if UIDeviceOrientationIsPortrait(deviceOrientation) || UIDeviceOrientationIsLandscape(deviceOrientation) {
             let previewLayer = cameraView.layer as! AVCaptureVideoPreviewLayer
             previewLayer.connection.videoOrientation = AVCaptureVideoOrientation(rawValue: deviceOrientation.rawValue)!
-            videoDataOutput.connectionWithMediaType(AVMediaTypeVideo).videoOrientation = AVCaptureVideoOrientation(rawValue: deviceOrientation.rawValue)!
+            videoDataOutput.connection(withMediaType: AVMediaTypeVideo).videoOrientation = AVCaptureVideoOrientation(rawValue: deviceOrientation.rawValue)!
         }
 
     }
     
     
-    func stillImageCapture(handler: (NSData) -> Void) {
+    func stillImageCapture(_ handler: @escaping (Data) -> Void) {
         
-        dispatch_async(sessionQueue) {
-            let connection = stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
+        sessionQueue.async {
+            let connection = stillImageOutput.connection(withMediaType: AVMediaTypeVideo)
             let previewLayer = cameraView.layer as! AVCaptureVideoPreviewLayer
             
             // Update the orientation on the still image output video connection before capturing.
-            connection.videoOrientation = previewLayer.connection.videoOrientation
+            connection?.videoOrientation = previewLayer.connection.videoOrientation
             
             // Flash set to Auto for Still Capture.
-            ViewController.setFlashMode(AVCaptureFlashMode.Auto, forDevice: videoDeviceInput.device)
+            ViewController.setFlashMode(AVCaptureFlashMode.auto, forDevice: videoDeviceInput.device)
             
             // Capture a still image.
-            stillImageOutput.captureStillImageAsynchronouslyFromConnection(connection) { (imageDataSampleBuffer, error) -> Void in
+            stillImageOutput.captureStillImageAsynchronously(from: connection) { (imageDataSampleBuffer, error) -> Void in
                 
                 if imageDataSampleBuffer != nil {
                     // The sample buffer is not retained. Create image data before saving the still image to the photo library asynchronously.
                     let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(imageDataSampleBuffer)
 
-                    handler(imageData)
+                    handler(imageData!)
                     
                 } else {
-                    NSLog("Could not capture still image: %@", error)
+                    print("Could not capture still image")
                 }
             }
             
@@ -397,81 +397,81 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
 
     //MARK: KVO and Notifications
     
-    private func addObservers() {
-        session.addObserver(self, forKeyPath: "running", options: NSKeyValueObservingOptions.New, context: SessionRunningContext)
-        stillImageOutput.addObserver(self, forKeyPath: "capturingStillImage", options:NSKeyValueObservingOptions.New, context: CapturingStillImageContext)
+    fileprivate func addObservers() {
+        session.addObserver(self, forKeyPath: "running", options: NSKeyValueObservingOptions.new, context: SessionRunningContext)
+        stillImageOutput.addObserver(self, forKeyPath: "capturingStillImage", options:NSKeyValueObservingOptions.new, context: CapturingStillImageContext)
         
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.subjectAreaDidChange(_:)), name: AVCaptureDeviceSubjectAreaDidChangeNotification, object: videoDeviceInput.device)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.sessionRuntimeError(_:)), name: AVCaptureSessionRuntimeErrorNotification, object: session)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.subjectAreaDidChange(_:)), name: NSNotification.Name.AVCaptureDeviceSubjectAreaDidChange, object: videoDeviceInput.device)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.sessionRuntimeError(_:)), name: NSNotification.Name.AVCaptureSessionRuntimeError, object: session)
         // A session can only run when the app is full screen. It will be interrupted in a multi-app layout, introduced in iOS 9,
         // see also the documentation of AVCaptureSessionInterruptionReason. Add observers to handle these session interruptions
         // and show a preview is paused message. See the documentation of AVCaptureSessionWasInterruptedNotification for other
         // interruption reasons.
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.sessionWasInterrupted(_:)), name: AVCaptureSessionWasInterruptedNotification, object: session)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.sessionInterruptionEnded(_:)), name: AVCaptureSessionInterruptionEndedNotification, object: session)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.sessionWasInterrupted(_:)), name: NSNotification.Name.AVCaptureSessionWasInterrupted, object: session)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.sessionInterruptionEnded(_:)), name: NSNotification.Name.AVCaptureSessionInterruptionEnded, object: session)
     }
     
-    private func removeObservers() {
-        NSNotificationCenter.defaultCenter().removeObserver(self)
+    fileprivate func removeObservers() {
+        NotificationCenter.default.removeObserver(self)
         
         session.removeObserver(self, forKeyPath: "running", context: SessionRunningContext)
         stillImageOutput.removeObserver(self, forKeyPath: "capturingStillImage", context: CapturingStillImageContext)
     }
     
-    override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+    /*override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         switch context {
         case CapturingStillImageContext:
             
-            let isCapturingStillImage = change![NSKeyValueChangeNewKey]! as! Bool
+            let isCapturingStillImage = change![NSKeyValueChangeKey.newKey]! as! Bool
             
             if isCapturingStillImage {
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
                     cameraView.layer.opacity = 0.0
-                    UIView.animateWithDuration(0.25) {
+                    UIView.animate(withDuration: 0.25, animations: {
                         cameraView.layer.opacity = 1.0
-                    }
+                    }) 
                 }
             }
         case SessionRunningContext:
             //let isSessionRunning = change![NSKeyValueChangeNewKey]! as! Bool
             
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 //self.snapGesture.enabled = isSessionRunning
                 //self.quickSnapGesture.enabled = isSessionRunning
             }
         default:
-            super.observeValueForKeyPath(keyPath, ofObject: object, change: change, context: context)
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
+    }*/
+    
+    func subjectAreaDidChange(_ notification: Notification) {
+        let devicePoint = CGPoint(x: 0.5, y: 0.5)
+        self.focusWithMode(AVCaptureFocusMode.continuousAutoFocus, exposeWithMode: AVCaptureExposureMode.continuousAutoExposure, atDevicePoint: devicePoint, monitorSubjectAreaChange: false)
     }
     
-    func subjectAreaDidChange(notification: NSNotification) {
-        let devicePoint = CGPointMake(0.5, 0.5)
-        self.focusWithMode(AVCaptureFocusMode.ContinuousAutoFocus, exposeWithMode: AVCaptureExposureMode.ContinuousAutoExposure, atDevicePoint: devicePoint, monitorSubjectAreaChange: false)
-    }
-    
-    func sessionRuntimeError(notification: NSNotification) {
+    func sessionRuntimeError(_ notification: Notification) {
         let error = notification.userInfo![AVCaptureSessionErrorKey]! as! NSError
         NSLog("Capture session runtime error: %@", error)
         
         // Automatically try to restart the session running if media services were reset and the last start running succeeded.
         // Otherwise, enable the user to try to resume the session running.
-        if error.code == AVError.MediaServicesWereReset.rawValue {
-            dispatch_async(sessionQueue) {
+        if error.code == AVError.Code.mediaServicesWereReset.rawValue {
+            sessionQueue.async {
                 if sessionRunning {
                     session.startRunning()
-                    sessionRunning = session.running
+                    sessionRunning = session.isRunning
                 } else {
-                    dispatch_async(dispatch_get_main_queue()) {
-                        resumeButton.hidden = false
+                    DispatchQueue.main.async {
+                        resumeButton.isHidden = false
                     }
                 }
             }
         } else {
-            resumeButton.hidden = false
+            resumeButton.isHidden = false
         }
     }
     
-    func sessionWasInterrupted(notification: NSNotification) {
+    func sessionWasInterrupted(_ notification: Notification) {
         // In some scenarios we want to enable the user to resume the session running.
         // For example, if music playback is initiated via control center while using AVCam,
         // then the user can let AVCam resume the session running, which will stop music playback.
@@ -483,108 +483,108 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
         let reason = notification.userInfo![AVCaptureSessionInterruptionReasonKey]! as! Int
         NSLog("Capture session was interrupted with reason %ld", reason)
         
-        if reason == AVCaptureSessionInterruptionReason.AudioDeviceInUseByAnotherClient.rawValue ||
-            reason == AVCaptureSessionInterruptionReason.VideoDeviceInUseByAnotherClient.rawValue {
+        if reason == AVCaptureSessionInterruptionReason.audioDeviceInUseByAnotherClient.rawValue ||
+            reason == AVCaptureSessionInterruptionReason.videoDeviceInUseByAnotherClient.rawValue {
             showResumeButton = true
-        } else if reason == AVCaptureSessionInterruptionReason.VideoDeviceNotAvailableWithMultipleForegroundApps.rawValue {
+        } else if reason == AVCaptureSessionInterruptionReason.videoDeviceNotAvailableWithMultipleForegroundApps.rawValue {
             // Simply fade-in a label to inform the user that the camera is unavailable.
-            cameraUnavailableLabel.hidden = false
+            cameraUnavailableLabel.isHidden = false
             cameraUnavailableLabel.alpha = 0.0
-            UIView.animateWithDuration(0.25) {
+            UIView.animate(withDuration: 0.25, animations: {
                 cameraUnavailableLabel.alpha = 1.0
-            }
+            }) 
         }
         
         if showResumeButton {
             // Simply fade-in a button to enable the user to try to resume the session running.
-            resumeButton.hidden = false
+            resumeButton.isHidden = false
             resumeButton.alpha = 0.0
-            UIView.animateWithDuration(0.25) {
+            UIView.animate(withDuration: 0.25, animations: {
                 resumeButton.alpha = 1.0
-            }
+            }) 
         }
     }
     
-    func sessionInterruptionEnded(notification: NSNotification) {
+    func sessionInterruptionEnded(_ notification: Notification) {
         NSLog("Capture session interruption ended")
         
-        if !resumeButton.hidden {
-            UIView.animateWithDuration(0.25, animations: {
+        if !resumeButton.isHidden {
+            UIView.animate(withDuration: 0.25, animations: {
                 resumeButton.alpha = 0.0
                 }, completion: {finished in
-                    resumeButton.hidden = true
+                    resumeButton.isHidden = true
             })
         }
-        if !cameraUnavailableLabel.hidden {
-            UIView.animateWithDuration(0.25, animations: {
+        if !cameraUnavailableLabel.isHidden {
+            UIView.animate(withDuration: 0.25, animations: {
                 cameraUnavailableLabel.alpha = 0.0
                 }, completion: {finished in
-                    cameraUnavailableLabel.hidden = true
+                    cameraUnavailableLabel.isHidden = true
             })
         }
     }
 
     //MARK: Actions
     
-    func resumeInterruptedSession(sender: AnyObject) {
+    func resumeInterruptedSession(_ sender: AnyObject) {
     
-        dispatch_async(sessionQueue) {
+        sessionQueue.async {
             // The session might fail to start running, e.g., if a phone or FaceTime call is still using audio or video.
             // A failure to start the session running will be communicated via a session runtime error notification.
             // To avoid repeatedly failing to start the session running, we only try to restart the session running in the
             // session runtime error handler if we aren't trying to resume the session running.
             session.startRunning()
-            sessionRunning = session.running
-            if !session.running {
-                dispatch_async(dispatch_get_main_queue()) {
+            sessionRunning = session.isRunning
+            if !session.isRunning {
+                DispatchQueue.main.async {
                     let message = NSLocalizedString("Unable to resume", comment: "Alert message when unable to resume the session running")
-                    let alertController = UIAlertController(title: "AVCam", message: message, preferredStyle: UIAlertControllerStyle.Alert)
-                    let cancelAction = UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: UIAlertActionStyle.Cancel, handler: nil)
+                    let alertController = UIAlertController(title: "AVCam", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                    let cancelAction = UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: UIAlertActionStyle.cancel, handler: nil)
                     alertController.addAction(cancelAction)
-                    self.presentViewController(alertController, animated: true, completion: nil)
+                    self.present(alertController, animated: true, completion: nil)
                 }
             } else {
-                dispatch_async(dispatch_get_main_queue()) {
-                    resumeButton.hidden = true
+                DispatchQueue.main.async {
+                    resumeButton.isHidden = true
                 }
             }
         }
     }
     
 
-    @IBAction func focusAndExposeTap(gestureRecognizer: UIGestureRecognizer) {
-        let devicePoint = (cameraView.layer as! AVCaptureVideoPreviewLayer).captureDevicePointOfInterestForPoint(gestureRecognizer.locationInView(gestureRecognizer.view))
-        self.focusWithMode(AVCaptureFocusMode.AutoFocus, exposeWithMode: AVCaptureExposureMode.AutoExpose, atDevicePoint: devicePoint, monitorSubjectAreaChange: true)
+    @IBAction func focusAndExposeTap(_ gestureRecognizer: UIGestureRecognizer) {
+        let devicePoint = (cameraView.layer as! AVCaptureVideoPreviewLayer).captureDevicePointOfInterest(for: gestureRecognizer.location(in: gestureRecognizer.view))
+        self.focusWithMode(AVCaptureFocusMode.autoFocus, exposeWithMode: AVCaptureExposureMode.autoExpose, atDevicePoint: devicePoint, monitorSubjectAreaChange: true)
 
     }
 
     //MARK: Device Configuration
-    func focusWithMode(focusMode: AVCaptureFocusMode, exposeWithMode exposureMode: AVCaptureExposureMode, atDevicePoint point:CGPoint, monitorSubjectAreaChange: Bool) {
-        dispatch_async(sessionQueue) {
+    func focusWithMode(_ focusMode: AVCaptureFocusMode, exposeWithMode exposureMode: AVCaptureExposureMode, atDevicePoint point:CGPoint, monitorSubjectAreaChange: Bool) {
+        sessionQueue.async {
             let device = videoDeviceInput.device
             do {
-                try device.lockForConfiguration()
-                defer {device.unlockForConfiguration()}
+                try device?.lockForConfiguration()
+                defer {device?.unlockForConfiguration()}
                 // Setting (focus/exposure)PointOfInterest alone does not initiate a (focus/exposure) operation.
                 // Call -set(Focus/Exposure)Mode: to apply the new point of interest.
-                if device.focusPointOfInterestSupported && device.isFocusModeSupported(focusMode) {
-                    device.focusPointOfInterest = point
-                    device.focusMode = focusMode
+                if (device?.isFocusPointOfInterestSupported)! && (device?.isFocusModeSupported(focusMode))! {
+                    device?.focusPointOfInterest = point
+                    device?.focusMode = focusMode
                 }
                 
-                if device.exposurePointOfInterestSupported && device.isExposureModeSupported(exposureMode) {
-                    device.exposurePointOfInterest = point
-                    device.exposureMode = exposureMode
+                if (device?.isExposurePointOfInterestSupported)! && (device?.isExposureModeSupported(exposureMode))! {
+                    device?.exposurePointOfInterest = point
+                    device?.exposureMode = exposureMode
                 }
                 
-                device.subjectAreaChangeMonitoringEnabled = monitorSubjectAreaChange
+                device?.isSubjectAreaChangeMonitoringEnabled = monitorSubjectAreaChange
             } catch let error as NSError {
                 NSLog("Could not lock device for configuration: %@", error)
             } catch _ {}
         }
     }
     
-    class func setFlashMode(flashMode: AVCaptureFlashMode, forDevice device: AVCaptureDevice) {
+    class func setFlashMode(_ flashMode: AVCaptureFlashMode, forDevice device: AVCaptureDevice) {
         if device.hasFlash && device.isFlashModeSupported(flashMode) {
             do {
                 try device.lockForConfiguration()
@@ -596,9 +596,9 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
         }
     }
 
-    class func deviceWithMediaType(mediaType: String, preferringPosition position: AVCaptureDevicePosition) -> AVCaptureDevice? {
-        let devices = AVCaptureDevice.devicesWithMediaType(mediaType)
-        var captureDevice = devices.first as! AVCaptureDevice?
+    class func deviceWithMediaType(_ mediaType: String, preferringPosition position: AVCaptureDevicePosition) -> AVCaptureDevice? {
+        let devices = AVCaptureDevice.devices(withMediaType: mediaType)
+        var captureDevice = devices?.first as! AVCaptureDevice?
         
         for device in devices as! [AVCaptureDevice] {
             if device.position == position {
@@ -614,7 +614,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
 
 class CameraView: UIView {
     
-    override class func layerClass() -> AnyClass {
+    override class var layerClass : AnyClass {
         
         return AVCaptureVideoPreviewLayer.self
     }

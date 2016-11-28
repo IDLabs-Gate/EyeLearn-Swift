@@ -34,11 +34,11 @@ public func - (left: CGPoint, right: CGPoint) -> CGPoint {
     return CGPoint(x: left.x - right.x, y: left.y - right.y)
 }
 
-public func -= (inout left: CGPoint, right: CGPoint) {
+public func -= (left: inout CGPoint, right: CGPoint) {
     left = left - right
 }
 
-public func += (inout left: CGPoint, right: CGPoint) {
+public func += (left: inout CGPoint, right: CGPoint) {
     left = left + right
 }
 
@@ -89,13 +89,13 @@ public func /(left: CGSize, right: CGFloat) -> CGSize {
 
 extension CGPoint {
     
-    func distanceToPoint(p: CGPoint) -> CGFloat {
+    func distanceToPoint(_ p: CGPoint) -> CGFloat {
         
         return sqrt(pow(self.x-p.x, 2) + pow(self.y-p.y, 2))
         
     }
     
-    func distanceToPoints(pts: Array<CGPoint>) -> Array<CGFloat> {
+    func distanceToPoints(_ pts: Array<CGPoint>) -> Array<CGFloat> {
         
         return pts.map { p in distanceToPoint(p) }
         
@@ -107,7 +107,7 @@ extension CGPoint {
 
 extension CGRect {
     
-    func keepWithin(bounds: CGRect) -> CGRect {
+    func keepWithin(_ bounds: CGRect) -> CGRect {
         
         var output = self
         
@@ -142,18 +142,18 @@ extension UIView : UIPopoverPresentationControllerDelegate {
 
     func flash() {
         
-        let flashView = UIView(frame: CGRect(origin: CGPointZero, size: self.bounds.size))
-        flashView.backgroundColor = UIColor.whiteColor()
+        let flashView = UIView(frame: CGRect(origin: CGPoint.zero, size: self.bounds.size))
+        flashView.backgroundColor = UIColor.white
         flashView.alpha = 0.5
         addSubview(flashView)
         
-        UIView .animateWithDuration(0.1, animations: { () -> Void in
+        UIView .animate(withDuration: 0.1, animations: { () -> Void in
             
             flashView.alpha = 1
             
             }, completion: { b -> Void in
                 
-                UIView .animateWithDuration(0.3, animations: { () -> Void in
+                UIView .animate(withDuration: 0.3, animations: { () -> Void in
                     
                     flashView.alpha = 0
                     
@@ -171,17 +171,17 @@ extension UIView : UIPopoverPresentationControllerDelegate {
         
         guard let currentContext = UIGraphicsGetCurrentContext() else { return UIImage() }
         
-        layer .renderInContext(currentContext)
+        layer .render(in: currentContext)
         
         let img = UIGraphicsGetImageFromCurrentImageContext()
 
         UIGraphicsEndImageContext()
         
-        return img
+        return img!
         
     }
     
-    func smoothAddSubview(view: UIView, duration: NSTimeInterval, completion: (Void->Void)?) {
+    func smoothAddSubview(_ view: UIView, duration: TimeInterval, completion: ((Void)->Void)?) {
 
         let oldAlpha = view.alpha
 
@@ -189,7 +189,7 @@ extension UIView : UIPopoverPresentationControllerDelegate {
         
         addSubview(view)
         
-        UIView .animateWithDuration(duration, animations: {
+        UIView .animate(withDuration: duration, animations: {
             
             view.alpha = oldAlpha
 
@@ -197,24 +197,24 @@ extension UIView : UIPopoverPresentationControllerDelegate {
         
     }
     
-    func smoothHide(duration duration: NSTimeInterval, completion: (Void->Void)?) {
+    func smoothHide(duration: TimeInterval, completion: ((Void)->Void)?) {
         
-        UIView .animateWithDuration(duration, animations: { self.alpha = 0 }, completion: { b in completion?() })
+        UIView .animate(withDuration: duration, animations: { self.alpha = 0 }, completion: { b in completion?() })
     }
     
-    func smoothChangeAlpha(a: CGFloat, duration: NSTimeInterval, completion: (Void->Void)?) {
+    func smoothChangeAlpha(_ a: CGFloat, duration: TimeInterval, completion: ((Void)->Void)?) {
         
-        UIView .animateWithDuration(duration, animations: { self.alpha = a }, completion: { b in completion?() })
+        UIView .animate(withDuration: duration, animations: { self.alpha = a }, completion: { b in completion?() })
     }
     
-    func addActivityIndicatorOverlay(completion:(Void->Void)?) {
+    func addActivityIndicatorOverlay(_ completion:((Void)->Void)?) {
         
         let actView = UIView(frame: bounds)
-        actView.backgroundColor = UIColor.blackColor()
+        actView.backgroundColor = UIColor.black
         actView.alpha = 0.5
         
-        let indict = UIActivityIndicatorView(frame: CGRect(origin: CGPointZero, size: actView.bounds.size/7))
-        indict.center = actView.center; indict.activityIndicatorViewStyle = .WhiteLarge
+        let indict = UIActivityIndicatorView(frame: CGRect(origin: CGPoint.zero, size: actView.bounds.size/7))
+        indict.center = actView.center; indict.activityIndicatorViewStyle = .whiteLarge
         actView .addSubview(indict)
         indict .startAnimating()
         

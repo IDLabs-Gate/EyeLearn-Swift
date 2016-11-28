@@ -28,23 +28,23 @@ import Photos
 private var nextState = PredictionState.start
 
 
-private var predictors = NSPointerArray(options: .OpaqueMemory)
+private var predictors = NSPointerArray(options: .opaqueMemory)
 private var predictorNames = [String]()
-private var trainer : UnsafeMutablePointer<Void> = nil
+private var trainer : UnsafeMutableRawPointer? = nil
 private var trainingName = String()
 
-private let groupAlg = dispatch_group_create()
+private let groupAlg = DispatchGroup()
 private var lockAlg = false
 
 private var transRatio = CGFloat(0)
 
-let jobQueue = dispatch_queue_create("jobQueue", DISPATCH_QUEUE_SERIAL)
+let jobQueue = DispatchQueue(label: "jobQueue", attributes: [])
 
 private var objectText = ""
 private var faceText = ""
 
 //neural network
-private let network = jpcnn_create_network((NSBundle.mainBundle().pathForResource("jetpac", ofType: "ntwk")! as NSString).UTF8String)
+private let network = jpcnn_create_network((Bundle.main.path(forResource: "jetpac", ofType: "ntwk")! as NSString).utf8String)
 
 //svm
 private var sampleCount = 0
@@ -56,7 +56,9 @@ private let faceDetector = CIDetector(ofType: CIDetectorTypeFace, context: nil, 
 
 extension ViewController {
     
-    func processFrame(frameImage: CIImage){
+    func processFrame(_ frameImage: CIImage){
+        
+        let startTime = Date()
         
         let w = frameImage.extent.size.width
         let h = frameImage.extent.size.height
@@ -66,16 +68,16 @@ extension ViewController {
         
         
         defer {
-            
             announce()
             
+            //keep at least 0.2 sec between processing frames
+            while Double(Date().timeIntervalSince(startTime))<0.2 {}
         }
         
         //Face Detection Algorithm
         
         var mask = CGRect(x: deltaX, y: 0, width: view.bounds.width*h/view.bounds.height, height: h) //full screen
-        
-        dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0)){
+        DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.low).sync{
             
             self.detectFaces(frameImage, rect: mask)
         }
@@ -89,13 +91,13 @@ extension ViewController {
             mask = CGRect(x: selection.origin.x*transRatio+deltaX, y: selection.origin.y*transRatio, width: selection.size.width*transRatio, height: selection.size.height*transRatio)
             
             //translate CoreImage coordinates to UIKit coordinates
-            var transform = CGAffineTransformMakeScale(1, -1)
-            transform = CGAffineTransformTranslate(transform, 0, -view.bounds.height*transRatio)
+            var transform = CGAffineTransform(scaleX: 1, y: -1)
+            transform = transform.translatedBy(x: 0, y: -view.bounds.height*transRatio)
             
-            mask = CGRectApplyAffineTransform(mask, transform)
+            mask = mask.applying(transform)
         }
         
-        dispatch_group_async(groupAlg, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)){
+        DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.high).async(group: groupAlg){
             
             if let obj = self.predictObjects(frameImage,rect: mask){
                 
@@ -108,7 +110,7 @@ extension ViewController {
                     jpcnn_train(trainer, 1.0, obj.predictions, obj.length)
                     sampleCount += 1
                     
-                    dispatch_async(dispatch_get_main_queue()){
+                    DispatchQueue.main.async{
                         self.learningProgressView.setProgress(Float(sampleCount)/Float(totalSamplesPlus), animated: true)
                     }
                     
@@ -118,10 +120,10 @@ extension ViewController {
                         
                         self.changeState(.waiting)
                         
-                        dispatch_async(dispatch_get_main_queue()){
-                            self.learnButton.setTitle("Continue", forState: .Normal)
-                            self.learningProgressView.hidden = false
-                            self.learningLabel.hidden = false
+                        DispatchQueue.main.async{
+                            self.learnButton.setTitle("Continue", for: UIControlState())
+                            self.learningProgressView.isHidden = false
+                            self.learningLabel.isHidden = false
                         }
 
                         self.speak("Now I need to see examples of things that are not the object you're looking for. Press the button when you're ready.", voice: manVoice)
@@ -133,7 +135,7 @@ extension ViewController {
                     jpcnn_train(trainer, 0.0, obj.predictions, obj.length)
                     sampleCount += 1
 
-                    dispatch_async(dispatch_get_main_queue()){
+                    DispatchQueue.main.async{
                         self.learningProgressView.setProgress(Float(sampleCount)/Float(totalSamplesMinus), animated: true)
                         NSLog("progress- %f", Float(sampleCount)/Float(totalSamplesPlus))
                     }
@@ -148,13 +150,13 @@ extension ViewController {
                     
                 case .predicting:
                     
-                    dispatch_sync(jobQueue){
+                    jobQueue.sync{
                     
                         var indexes = [Int]()
 
                         for i in 0..<predictors.count {
                             
-                            let p = predictors.pointerAtIndex(i)
+                            let p = predictors.pointer(at: i)
                             let predictionValue = jpcnn_predict(p, obj.predictions, obj.length)
                             NSLog("Predictor: %@  Value: %f", predictorNames[i], predictionValue)
                         
@@ -183,7 +185,7 @@ extension ViewController {
             self.state = nextState
         }
         
-        dispatch_group_notify(groupAlg, dispatch_get_main_queue()){
+        groupAlg.notify(queue: DispatchQueue.main){
             lockAlg = false
         }
         
@@ -191,11 +193,11 @@ extension ViewController {
     
     //MARK: Faces
     
-    func detectFaces(frameImage: CIImage, rect: CGRect){
+    func detectFaces(_ frameImage: CIImage, rect: CGRect){
         
-        let frameImage = CIImage(CGImage: CIContext().createCGImage(frameImage, fromRect: rect))
+        let frameImage = CIImage(cgImage: CIContext().createCGImage(frameImage, from: rect)!)
         
-        let features = faceDetector.featuresInImage(frameImage, options: [CIDetectorSmile : true/*, CIDetectorEyeBlink : true*/]) as! [CIFaceFeature]
+        let features = faceDetector?.features(in: frameImage, options: [CIDetectorSmile : true/*, CIDetectorEyeBlink : true*/]) as! [CIFaceFeature]
         
         faceText = ""
         if features.count>0{
@@ -213,9 +215,9 @@ extension ViewController {
     }
     
     
-    func drawFaceBoxesForFeatures(features: [CIFaceFeature]){
+    func drawFaceBoxesForFeatures(_ features: [CIFaceFeature]){
         
-        dispatch_async(dispatch_get_main_queue()){
+        DispatchQueue.main.async{
             
             let layers = self.view.layer.sublayers
             
@@ -227,7 +229,7 @@ extension ViewController {
                 
                 for l in subLayers {
                     if l.name == "FaceLayer" {
-                        l.hidden = true
+                        l.isHidden = true
                     }
                 }
                 
@@ -239,12 +241,12 @@ extension ViewController {
             
             //translate CoreImage coordinates to UIKit coordinates
             //also compensate for transRatio of conforming to video frame height
-            var transform = CGAffineTransformMakeScale(1/transRatio, -1/transRatio)
-            transform = CGAffineTransformTranslate(transform, 0, -self.view.bounds.height*transRatio)
+            var transform = CGAffineTransform(scaleX: 1/transRatio, y: -1/transRatio)
+            transform = transform.translatedBy(x: 0, y: -self.view.bounds.height*transRatio)
             
             for f in features {
                 
-                let faceRect = CGRectApplyAffineTransform(f.bounds, transform)
+                let faceRect = f.bounds.applying(transform)
                 
                 var featureLayer: CALayer? = nil
                 
@@ -263,14 +265,14 @@ extension ViewController {
                 
                 if let layer = featureLayer {
                     layer.frame = faceRect
-                    layer.hidden = false
+                    layer.isHidden = false
                 }
                     
                 else {
                     //create new one if necessary
                     
                     let newFeatureLayer = CALayer()
-                    newFeatureLayer.contents = UIImage(named: "square1")?.CGImage
+                    newFeatureLayer.contents = UIImage(named: "square1")?.cgImage
                     newFeatureLayer.name = "FaceLayer"
                     newFeatureLayer.frame = faceRect
                     self.view.layer .addSublayer(newFeatureLayer)
@@ -286,9 +288,9 @@ extension ViewController {
     
     //MARK: Predictors
     
-    func predictObjects(frameImage: CIImage, rect: CGRect) -> (predictions:UnsafeMutablePointer<Float>, length:Int32)?{
+    func predictObjects(_ frameImage: CIImage, rect: CGRect) -> (predictions:UnsafeMutablePointer<Float>, length:Int32)?{
         
-        var frameImage = CIImage(CGImage: CIContext().createCGImage(frameImage, fromRect: rect))
+        var frameImage = CIImage(cgImage: CIContext().createCGImage(frameImage, from: rect)!)
         
         let w = frameImage.extent.size.width
         let h = frameImage.extent.size.height
@@ -313,10 +315,10 @@ extension ViewController {
         //showThumbImage(UIImage(CIImage: frameImage))
         
         var buffer : CVPixelBuffer?
-        CVPixelBufferCreate(kCFAllocatorDefault, Int(frameImage.extent.size.width), Int(frameImage.extent.size.height), sourcePixelFormat, [String(kCVPixelBufferIOSurfacePropertiesKey) : [:] ], &buffer)
+        CVPixelBufferCreate(kCFAllocatorDefault, Int(frameImage.extent.size.width), Int(frameImage.extent.size.height), sourcePixelFormat, [String(kCVPixelBufferIOSurfacePropertiesKey) : [:]] as CFDictionary, &buffer)
         
         guard let pixelBuffer = buffer else { NSLog("Can't craete pixel buffer !"); return nil }
-        CIContext().render(frameImage, toCVPixelBuffer: pixelBuffer)
+        CIContext().render(frameImage, to: pixelBuffer)
         
         let doReverseChannels = sourcePixelFormat == kCVPixelFormatType_32ARGB ? 1 : 0
         
@@ -324,17 +326,18 @@ extension ViewController {
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let fullHeight = CVPixelBufferGetHeight(pixelBuffer)
         
-        CVPixelBufferLockBaseAddress(pixelBuffer, 0)
-        let sourceBaseAddr = CVPixelBufferGetBaseAddress(pixelBuffer)
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        guard let sourceBaseAddr = CVPixelBufferGetBaseAddress(pixelBuffer)?.assumingMemoryBound(to: UInt8.self) else { return nil}
+        
         
         let height = fullHeight<=width ? fullHeight : width
         let sourceStartAddr = fullHeight<=width ? sourceBaseAddr : sourceBaseAddr + ((fullHeight-width)/2) * sourceRowBytes
         
-        let cnnInput = jpcnn_create_image_buffer_from_uint8_data(UnsafeMutablePointer<UInt8>(sourceStartAddr), Int32(width), Int32(height), 4, Int32(sourceRowBytes), Int32(doReverseChannels), 1)
+        let cnnInput = jpcnn_create_image_buffer_from_uint8_data(sourceStartAddr, Int32(width), Int32(height), 4, Int32(sourceRowBytes), Int32(doReverseChannels), 1)
         
-        var predictions : UnsafeMutablePointer<Float> = nil
+        var predictions : UnsafeMutablePointer<Float>? = nil
         var length = Int32()
-        var labels : UnsafeMutablePointer<UnsafeMutablePointer<Int8>> = nil
+        var labels : UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>? = nil
         var labelsLength = Int32()
         
         jpcnn_classify_image(network, cnnInput, UInt32(JPCNN_RANDOM_SAMPLE), -2, &predictions, &length, &labels, &labelsLength)
@@ -343,7 +346,7 @@ extension ViewController {
         
         //showThumbImage(UIImage(CIImage: CIImage(CVPixelBuffer: pixelBuffer)))
         
-        return (predictions,length)
+        return (predictions!,length)
         
     }
 
@@ -362,7 +365,7 @@ extension ViewController {
             
             //make sure it's not a duplicate
             
-            if !predictorNames.contains({ $0 == name }) {
+            if !predictorNames.contains(where: { $0 == name }) {
                 
                 //get sample totals
                 if let plusText = fields[1].text {
@@ -410,7 +413,7 @@ extension ViewController {
         let predictor = jpcnn_create_predictor_from_trainer(trainer)
         
         if predictor != nil {
-            dispatch_sync(jobQueue){
+            jobQueue.sync{
                 predictorNames.append(trainingName)
                 predictors.addPointer(predictor)
             }
@@ -418,35 +421,35 @@ extension ViewController {
         
         changeState(.predicting)
         
-        savePredictor(predictor, toFileNamed: trainingName)
+        savePredictor(predictor!, toFileNamed: trainingName)
         
         NSLog("Predictor setup done!")
         
-        dispatch_async(dispatch_get_main_queue()){
-            self.learnButton.setTitle("Learn", forState: .Normal)
-            self.learningProgressView.hidden = true
-            self.learningLabel.hidden = true
+        DispatchQueue.main.async{
+            self.learnButton.setTitle("Learn", for: UIControlState())
+            self.learningProgressView.isHidden = true
+            self.learningLabel.isHidden = true
         }
         
         speak("You can now scan around using the camera, to detect objects' presence", voice: manVoice)
         
     }
     
-    func savePredictor(predictor: UnsafeMutablePointer<Void>, toFileNamed fileName: String) {
+    func savePredictor(_ predictor: UnsafeMutableRawPointer, toFileNamed fileName: String) {
         
         struct SPredictorInfo {
             var model: UnsafeMutablePointer<svm_model>
             var problem: UnsafeMutablePointer<SLibSvmProblem>
         }
         
-        let predictorInfo = unsafeBitCast(predictor, UnsafeMutablePointer<SPredictorInfo>.self)
+        let predictorInfo = unsafeBitCast(predictor, to: UnsafeMutablePointer<SPredictorInfo>.self)
         
-        let model = predictorInfo.memory.model
+        let model = predictorInfo.pointee.model
         
-        let docsDir = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+        let docsDir = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
         let path = docsDir + "/" + fileName
 
-        let filePath = (path as NSString).cStringUsingEncoding(NSASCIIStringEncoding)
+        let filePath = (path as NSString).cString(using: String.Encoding.ascii.rawValue)
         
         let fp = fopen(filePath, "w");
         
@@ -463,14 +466,14 @@ extension ViewController {
 
     }
     
-    func deletePredictor(name : String) {
+    func deletePredictor(_ name : String) {
         
-        dispatch_sync(jobQueue){
+        jobQueue.sync{
             for i in 0..<predictorNames.count {
 
                 if predictorNames[i] == name {
-                    predictorNames.removeAtIndex(i)
-                    predictors.removePointerAtIndex(i)
+                    predictorNames.remove(at: i)
+                    predictors.removePointer(at: i)
                     
                     break;
                 }
@@ -478,11 +481,11 @@ extension ViewController {
             
         }
         
-        let docsDir = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
-        let fileManager = NSFileManager.defaultManager()
+        let docsDir = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        let fileManager = FileManager.default
         
         do {
-            let files = try fileManager.contentsOfDirectoryAtPath(docsDir)
+            let files = try fileManager.contentsOfDirectory(atPath: docsDir)
             
             let predictorFiles = files.filter({ $0 == name })
             
@@ -491,7 +494,7 @@ extension ViewController {
                 
                 print("removing \(path)")
                 do {
-                    try fileManager.removeItemAtPath(path)
+                    try fileManager.removeItem(atPath: path)
                 } catch let error as NSError {
                     NSLog("could not remove \(path)")
                     print(error.localizedDescription)
@@ -507,18 +510,18 @@ extension ViewController {
     
     func loadAllPredictors() {
         
-        let docsDir = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
-        let fileManager = NSFileManager.defaultManager()
+        let docsDir = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        let fileManager = FileManager.default
         
         do {
-            let files = try fileManager.contentsOfDirectoryAtPath(docsDir)
+            let files = try fileManager.contentsOfDirectory(atPath: docsDir)
             
-            dispatch_sync(jobQueue){
-                predictors = NSPointerArray(options: .OpaqueMemory)
+            jobQueue.sync{
+                predictors = NSPointerArray(options: .opaqueMemory)
                 
                 for name in files {
                     let path = docsDir + "/" + name
-                    let filePath = (path as NSString).cStringUsingEncoding(NSASCIIStringEncoding)
+                    let filePath = (path as NSString).cString(using: String.Encoding.ascii.rawValue)
                     
                     let p = jpcnn_load_predictor(filePath)
                     
@@ -549,9 +552,9 @@ extension ViewController {
             
             self.changeState(.start)
             
-            dispatch_sync(jobQueue){
+            jobQueue.sync{
                 predictorNames.removeAll()
-                predictors = NSPointerArray(options: .OpaqueMemory)
+                predictors = NSPointerArray(options: .opaqueMemory)
             }
             
         }
@@ -559,7 +562,7 @@ extension ViewController {
     
     //MARK: States
     
-    func changeState(s: PredictionState){
+    func changeState(_ s: PredictionState){
         
         nextState = s
         
@@ -577,11 +580,11 @@ extension ViewController {
         
         sampleCount = 0
         
-        dispatch_async(dispatch_get_main_queue()){
-            self.learnButton.setTitle("Cancel", forState: .Normal)
+        DispatchQueue.main.async{
+            self.learnButton.setTitle("Cancel", for: UIControlState())
             self.learningProgressView.setProgress(0, animated: false)
-            self.learningProgressView.hidden = false
-            self.learningLabel.hidden = false
+            self.learningProgressView.isHidden = false
+            self.learningLabel.isHidden = false
         }
         
         speak("Move around the thing you want to recognize, keeping the camera pointed at it, to capture different angles", voice: manVoice)
@@ -593,11 +596,11 @@ extension ViewController {
 
         sampleCount = 0
         
-        dispatch_async(dispatch_get_main_queue()){
-            self.learnButton.setTitle("Cancel", forState: .Normal)
+        DispatchQueue.main.async{
+            self.learnButton.setTitle("Cancel", for: UIControlState())
             self.learningProgressView.setProgress(0, animated: false)
-            self.learningProgressView.hidden = false
-            self.learningLabel.hidden = false
+            self.learningProgressView.isHidden = false
+            self.learningLabel.isHidden = false
         }
 
         speak("Now move around the room pointing the camera at lots of things, that are not the object you want to recognize", voice: manVoice)
@@ -614,10 +617,10 @@ extension ViewController {
             changeState(.start)
         }
         
-        dispatch_async(dispatch_get_main_queue()){
-            self.learnButton.setTitle("Learn", forState: .Normal)
-            self.learningProgressView.hidden = true
-            self.learningLabel.hidden = true
+        DispatchQueue.main.async{
+            self.learnButton.setTitle("Learn", for: UIControlState())
+            self.learningProgressView.isHidden = true
+            self.learningLabel.isHidden = true
         }
         
         /*
@@ -630,10 +633,10 @@ extension ViewController {
     
     //MARK: Utils
     
-    func showThumbImage(image: UIImage) {
+    func showThumbImage(_ image: UIImage) {
         
         //NSLog("%f x %f", image.size.width,image.size.height)
-        dispatch_async(dispatch_get_main_queue()) {
+        DispatchQueue.main.async {
             self.thumbPreview.image = image
         }
     }
@@ -648,7 +651,7 @@ extension ViewController {
         
         text += faceText
         
-        dispatch_sync(dispatch_get_main_queue()){
+        DispatchQueue.main.sync{
             self.announcer.text = text
         }
         
@@ -659,12 +662,12 @@ extension ViewController {
 
 func testNetwork() {
 
-    let imagePath = NSBundle.mainBundle().pathForResource("<image file name>", ofType: "jpeg")! as NSString
-    let inputImage = jpcnn_create_image_buffer_from_file(imagePath.UTF8String)
+    let imagePath = Bundle.main.path(forResource: "<image file name>", ofType: "jpeg")! as NSString
+    let inputImage = jpcnn_create_image_buffer_from_file(imagePath.utf8String)
     
-    var predictions : UnsafeMutablePointer<Float> = nil
+    var predictions : UnsafeMutablePointer<Float>? = nil
     var length = Int32()
-    var labels : UnsafeMutablePointer<UnsafeMutablePointer<Int8>> = nil
+    var labels : UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>? = nil
     var labelsLength = Int32()
     
     jpcnn_classify_image(network, inputImage, 0, 0, &predictions, &length, &labels, &labelsLength)
@@ -673,11 +676,11 @@ func testNetwork() {
     
     for i in 0..<Int(length) {
         
-        let predictionValue = predictions[i]
-        let label = labels[i % Int(labelsLength)]
+        let predictionValue = predictions?[i]
+        let label = labels?[i % Int(labelsLength)]
         
         //print labels and values
-        NSLog(String(format: "%@ - %0.2f\n", label, predictionValue))
+        NSLog(String(format: "%@ - %0.2f\n", label!, predictionValue!))
         
     }
     

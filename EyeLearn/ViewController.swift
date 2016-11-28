@@ -49,10 +49,10 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.blackColor()
+        view.backgroundColor = UIColor.black
         
-        learningProgressView.hidden = true
-        learningLabel.hidden = true
+        learningProgressView.isHidden = true
+        learningLabel.isHidden = true
         
         view.addActivityIndicatorOverlay {
             
@@ -72,9 +72,9 @@ class ViewController: UIViewController {
 
     //MARK: Actions
     
-    @IBAction func tapAction(sender: AnyObject) {
+    @IBAction func tapAction(_ sender: AnyObject) {
         
-        let tap = sender.locationInView(view)
+        let tap = sender.location(in: view)
         
         if selectRect == nil {
             
@@ -96,7 +96,7 @@ class ViewController: UIViewController {
         }
     }
     
-    @IBAction func learnAction(sender: AnyObject) {
+    @IBAction func learnAction(_ sender: AnyObject) {
         
         switch state {
             
@@ -115,13 +115,13 @@ class ViewController: UIViewController {
         }
     }
     
-    @IBAction func predictorsAction(sender: UIView) {
+    @IBAction func predictorsAction(_ sender: UIView) {
      
-        let docsDir = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
-        let fileManager = NSFileManager.defaultManager()
+        let docsDir = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        let fileManager = FileManager.default
 
         do {
-            let files = try fileManager.contentsOfDirectoryAtPath(docsDir)
+            let files = try fileManager.contentsOfDirectory(atPath: docsDir)
             
             guard files.count>0 else {
                 actionSheet(title: "No Predictors", itemNames: [String](), actionHandler: nil, fromSourceView: sender, lastRed: false)
@@ -158,13 +158,13 @@ class ViewController: UIViewController {
     
     //MARK: Utils
         
-    func addLayer(name name: String, image: UIImage, toLayer parent: CALayer) -> CALayer{
+    func addLayer(name: String, image: UIImage, toLayer parent: CALayer) -> CALayer{
         
         //remove previous layer
         removeLayers(name: name, fromLayer: parent)
         
         let layer = CALayer()
-        layer.contents = image.CGImage
+        layer.contents = image.cgImage
         layer.name = name
         
         parent.addSublayer(layer)
@@ -172,7 +172,7 @@ class ViewController: UIViewController {
         return layer
     }
     
-    func removeLayers(name name: String, fromLayer parent: CALayer){
+    func removeLayers(name: String, fromLayer parent: CALayer){
         
         guard let layers = parent.sublayers else { return }
         
@@ -191,7 +191,7 @@ class ViewController: UIViewController {
         
     //MARK: Orientation
     
-    override func shouldAutorotate() -> Bool {
+    override var shouldAutorotate : Bool {
         
         return false
     }
@@ -202,11 +202,11 @@ class ViewController: UIViewController {
         orientCam()
     }*/
     
-    override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
-        return .LandscapeRight
+    override var supportedInterfaceOrientations : UIInterfaceOrientationMask {
+        return .landscapeRight
     }
     
-    override func prefersStatusBarHidden() -> Bool {
+    override var prefersStatusBarHidden : Bool {
         return true
     }
 
