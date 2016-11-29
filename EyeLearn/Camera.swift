@@ -231,8 +231,8 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
     
     @IBAction func toggleCamAction(_ sender: Any) {
         
-        guard let button = sender as? UIView else { return }
-        button.isUserInteractionEnabled = false
+        guard let button = sender as? UIButton else { return }
+        button.isEnabled = false
         
         stopCam()
         
@@ -246,7 +246,7 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
             
             self.view.removeActivityIndicatorOverlay()
             
-            button.isUserInteractionEnabled = true
+            button.isEnabled = true
         }
     }
     

@@ -43,6 +43,10 @@ let jobQueue = DispatchQueue(label: "jobQueue", attributes: [])
 private var objectText = ""
 private var faceText = ""
 
+private var lastTime = Date()
+
+private let voiceInterval = 2.0
+
 //neural network
 private let network = jpcnn_create_network((Bundle.main.path(forResource: "jetpac", ofType: "ntwk")! as NSString).utf8String)
 
@@ -206,6 +210,20 @@ extension ViewController {
             let smiles = features.filter ({ $0.hasSmile }).count
             if smiles>0 {
                 faceText += String(format: " - %d Smiles", smiles)
+                
+                if Double(Date().timeIntervalSince(lastTime))>voiceInterval {
+                    lastTime = Date()
+                    speak("smile", voice: womanVoice)
+                    
+                }
+                
+            } else {
+                
+                if Double(Date().timeIntervalSince(lastTime))>voiceInterval {
+                    lastTime = Date()
+                    speak("face", voice: womanVoice)
+                    
+                }
             }
         }
         
@@ -566,6 +584,12 @@ extension ViewController {
         
         nextState = s
         
+        if nextState == .predicting || nextState == .start {
+            DispatchQueue.main.async {
+                self.toggleCamButton.isEnabled = true
+            }
+        }
+        
     }
     
     func startLearningPlus(){
@@ -585,6 +609,8 @@ extension ViewController {
             self.learningProgressView.setProgress(0, animated: false)
             self.learningProgressView.isHidden = false
             self.learningLabel.isHidden = false
+            
+            self.toggleCamButton.isEnabled = false
         }
         
         speak("Move around the thing you want to recognize, keeping the camera pointed at it, to capture different angles", voice: manVoice)
@@ -621,6 +647,8 @@ extension ViewController {
             self.learnButton.setTitle("Learn", for: UIControlState())
             self.learningProgressView.isHidden = true
             self.learningLabel.isHidden = true
+            
+            self.toggleCamButton.isEnabled = true
         }
         
         /*
