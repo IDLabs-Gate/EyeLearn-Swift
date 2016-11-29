@@ -7,7 +7,7 @@
 //    of this software and associated documentation files (the "Software"), to deal
 //    in the Software without restriction, including without limitation the rights
 //    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//    copies of the Software, and to permit persons to whom the Software is
+//    copies of the Software, and to permit persons AVCaptureSessionto whom the Software is
 //    furnished to do so, subject to the following conditions:
 //
 //    The above copyright notice and this permission notice shall be included in all
@@ -32,6 +32,8 @@ private var SessionRunningContext = UnsafeMutableRawPointer.allocate(bytes: 1, a
 
 private var cameraUnavailableLabel: UILabel!
 private var resumeButton: UIButton!
+
+var frontCamera = false
 
 // Session management
 private var sessionQueue: DispatchQueue!
@@ -141,11 +143,11 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
             
             backgroundRecordingID = UIBackgroundTaskInvalid
             
-            guard let backCamera = ViewController.deviceWithMediaType(AVMediaTypeVideo, preferringPosition: .back) else { return }
+            guard let camera =  ViewController.deviceWithMediaType(AVMediaTypeVideo, preferringPosition: frontCamera ? .front : .back) else { return }
             let vidInput: AVCaptureDeviceInput!
             do {
                 
-                vidInput = try AVCaptureDeviceInput(device: backCamera)
+                vidInput = try AVCaptureDeviceInput(device: camera)
             } catch let error as NSError {
                 vidInput = nil
                 NSLog("Could not create video device input: %@", error)
@@ -245,8 +247,50 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
         }
         
     }
-
-    
+    /*
+    func reloadCam() {
+        // camera loading code
+        session = AVCaptureSession()
+        session!.sessionPreset = AVCaptureSessionPresetPhoto
+        var captureDevice:AVCaptureDevice! = nil
+        // var backCamera = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
+        if (frontCamera == true) {
+            let videoDevices = AVCaptureDevice.devices(withMediaType: AVMediaTypeVideo)
+            
+            
+            for device in videoDevices!{
+                let device = device as! AVCaptureDevice
+                if device.position == AVCaptureDevicePosition.front {
+                    captureDevice = device
+                    break
+                }
+            }
+        } else {
+            var captureDevice = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeVideo)
+        }
+        
+        var error: NSError?
+        videoDeviceInput = AVCaptureDeviceInput(device: captureDevice, error: &error)
+        
+        if error == nil && session!.canAddInput(videoDeviceInput) {
+            session!.addInput(videoDeviceInput)
+            
+            stillImageOutput = AVCaptureStillImageOutput()
+            stillImageOutput!.outputSettings = [AVVideoCodecKey: AVVideoCodecJPEG]
+            if session!.canAddOutput(stillImageOutput) {
+                session!.addOutput(stillImageOutput)
+                
+                let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+                previewLayer!.videoGravity = AVLayerVideoGravityResizeAspect
+                previewLayer!.connection?.videoOrientation = AVCaptureVideoOrientation.portrait
+                
+                previewLayer.layer.addSublayer(previewLayer)
+                
+                session!.startRunning()
+            }
+        }
+    }
+    */
     func checkCam() -> AVCamSetupResult {
         
         sessionQueue.async {
@@ -292,8 +336,10 @@ extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
 
         sessionQueue.async {
             if setupResult == .success {
+                self.suspendFrames()
                 session.stopRunning()
                 sessionRunning = false
+                
                 //self .removeObservers()
             }
         }

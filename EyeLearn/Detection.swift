@@ -180,7 +180,7 @@ extension ViewController {
             }
             
             
-            NSLog("State: %d", self.state.rawValue)
+            //NSLog("State: %d", self.state.rawValue)
             
             self.state = nextState
         }
@@ -241,8 +241,8 @@ extension ViewController {
             
             //translate CoreImage coordinates to UIKit coordinates
             //also compensate for transRatio of conforming to video frame height
-            var transform = CGAffineTransform(scaleX: 1/transRatio, y: -1/transRatio)
-            transform = transform.translatedBy(x: 0, y: -self.view.bounds.height*transRatio)
+            var transform = CGAffineTransform(scaleX: frontCamera ? -1/transRatio : 1/transRatio, y: -1/transRatio)
+            transform = transform.translatedBy(x: frontCamera ? -self.view.bounds.width*transRatio : 0, y: -self.view.bounds.height*transRatio)
             
             for f in features {
                 
