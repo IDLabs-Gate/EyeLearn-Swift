@@ -39,6 +39,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var learnButton: UIButton!
     @IBOutlet weak var learningProgressView: UIProgressView!
     @IBOutlet weak var learningLabel: UILabel!
+    @IBOutlet weak var toggleCamButton: UIButton!
     
     var state = PredictionState.start
 
@@ -57,7 +58,7 @@ class ViewController: UIViewController {
         view.addActivityIndicatorOverlay {
             
             self.setupCam(){
-
+                
                 self.loadAllPredictors()
                 
                 self.resumeFrames()
@@ -69,7 +70,7 @@ class ViewController: UIViewController {
         }
         
     }
-
+    
     //MARK: Actions
     
     @IBAction func tapAction(_ sender: AnyObject) {
