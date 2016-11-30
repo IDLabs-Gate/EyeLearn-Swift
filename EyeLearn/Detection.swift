@@ -43,9 +43,10 @@ let jobQueue = DispatchQueue(label: "jobQueue", attributes: [])
 private var objectText = ""
 private var faceText = ""
 
-private var lastTime = Date()
-
-private let voiceInterval = 2.0
+private var lastFaceTime = Date()
+private var lastObjectTime = Date()
+private let faceVoiceInterval = 2.0
+private let objectVoiceInterval = 4.0
 
 //neural network
 private let network = jpcnn_create_network((Bundle.main.path(forResource: "jetpac", ofType: "ntwk")! as NSString).utf8String)
@@ -167,16 +168,19 @@ extension ViewController {
                             if predictionValue>0.7 {
                                 indexes.append(i)
                             }
-                        
+                            
                         }
 
                         for i in indexes {
                             objectText += predictorNames[i] + " "
+                            
+                            if Double(Date().timeIntervalSince(lastObjectTime))>objectVoiceInterval {
+                                lastObjectTime = Date()
+                                self.speak(predictorNames[i], voice: manVoice)
+                            }
                         }
                     }
-                    
-                    
-                    
+                
                 default: break
                     
                 }
@@ -211,24 +215,21 @@ extension ViewController {
             if smiles>0 {
                 faceText += String(format: " - %d Smiles", smiles)
                 
-                if Double(Date().timeIntervalSince(lastTime))>voiceInterval {
-                    lastTime = Date()
+                if Double(Date().timeIntervalSince(lastFaceTime))>faceVoiceInterval {
+                    lastFaceTime = Date()
                     speak("smile", voice: womanVoice)
-                    
                 }
                 
             } else {
                 
-                if Double(Date().timeIntervalSince(lastTime))>voiceInterval {
-                    lastTime = Date()
+                if Double(Date().timeIntervalSince(lastFaceTime))>faceVoiceInterval {
+                    lastFaceTime = Date()
                     speak("face", voice: womanVoice)
-                    
                 }
             }
         }
         
         self.drawFaceBoxesForFeatures(features)
-
         
     }
     

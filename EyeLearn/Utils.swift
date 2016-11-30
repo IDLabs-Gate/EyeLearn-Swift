@@ -29,17 +29,21 @@ let synth = AVSpeechSynthesizer()
 let manVoice = "en-gb"
 let womanVoice = "en-au"
 
+let speechQueue = DispatchQueue(label: "speech")
+
 extension UIViewController : UIPopoverPresentationControllerDelegate {
     
     //MARK: Voice
     func speak(_ words: String, voice: String){
         
-        let utterance = AVSpeechUtterance(string: words)
-        utterance.voice = AVSpeechSynthesisVoice(language: voice)
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 1.1
-        utterance.volume = 0.5
-        
-        synth.speak(utterance)
+        speechQueue.async {
+            let utterance = AVSpeechUtterance(string: words)
+            utterance.voice = AVSpeechSynthesisVoice(language: voice)
+            utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 1.1
+            utterance.volume = 0.5
+            
+            synth.speak(utterance)
+        }
     }
 
     //MARK: Memory
